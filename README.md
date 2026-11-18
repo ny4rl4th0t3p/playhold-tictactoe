@@ -8,6 +8,7 @@ each chapter's finished code, so you can compare yours with it, or run it.
 |-------------|---------------------------------------------------------------------|
 | `chapter1/` | A module: the board's state, a move, a view for each player, tests |
 | `chapter2/` | Its own messages, in a `.proto` generated with buf                  |
+| `chapter3/` | A server, and a test that plays a game through the Go SDK           |
 
 Each folder is a complete, tested state of the game, in one Go module, so two chapters can be compared with `diff`.
 It builds on playhold's releases as any game would: playhold at the version in `go.mod`. A version `v0.X.y` of this
