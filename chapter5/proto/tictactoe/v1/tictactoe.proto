@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package tictactoe.v1;
+
+option go_package = "github.com/ny4rl4th0t3p/playhold-tictactoe/chapter5/pb;pb";
+
+// #region messages
+
+// Message is the ID of each of the board module's messages.
+enum Message {
+  MESSAGE_UNSPECIFIED = 0;
+  MESSAGE_PLAY = 1;
+}
+
+// Play marks a cell, from 0 (top left) to 8 (bottom right).
+message Play {
+  int32 cell = 1;
+}
+
+// #endregion messages
+
+// #region view
+
+// Mark is what a cell holds, or a player's own mark. MARK_UNSPECIFIED is an empty cell.
+enum Mark {
+  MARK_UNSPECIFIED = 0;
+  MARK_X = 1;
+  MARK_O = 2;
+}
+
+// Status is how the game stands for the player a view is for.
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  STATUS_WAITING = 1; // for a second player
+  STATUS_YOUR_TURN = 2;
+  STATUS_THEIR_TURN = 3;
+  STATUS_WON = 4;
+  STATUS_LOST = 5;
+  STATUS_DRAW = 6;
+}
+
+// BoardView is what a player sees: the nine cells, their own mark, and how the game stands for them.
+message BoardView {
+  repeated Mark cells = 1;
+  Mark you = 2;
+  Status status = 3;
+}
+
+// #endregion view
+
+// #region saved
+
+// BoardState is how the server saves the board module's state, so a game survives a restart. Only the server reads it:
+// it never goes to a client.
+message BoardState {
+  repeated Mark cells = 1;
+  uint32 moves = 2;
+  Mark winner = 3;
+  bool draw = 4;
+}
+
+// #endregion saved

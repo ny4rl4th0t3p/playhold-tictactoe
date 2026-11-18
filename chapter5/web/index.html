@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tic-tac-toe</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            font-family: system-ui, sans-serif;
+        }
+
+        body {
+            margin: 0 auto;
+            max-width: 24rem;
+            padding: 1rem;
+        }
+
+        button {
+            font: inherit;
+            padding: 0.5rem 0.75rem;
+        }
+
+        #board {
+            display: grid;
+            gap: 0.25rem;
+            grid-template-columns: repeat(3, 5rem);
+        }
+
+        #board button {
+            font-size: 2rem;
+            height: 5rem;
+        }
+
+        #message {
+            color: #c62828;
+            min-height: 1.5rem;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+<h1>Tic-tac-toe</h1>
+<p id="connection"></p>
+<p id="message" role="alert"></p>
+
+<button id="new-game">New game</button>
+
+<section id="game" hidden>
+    <p>Send the other player <a id="link">this game's link</a>.</p>
+    <p id="status"></p>
+    <div id="board"></div>
+</section>
+
+<script type="module" src="./src/main.ts"></script>
+</body>
+</html>

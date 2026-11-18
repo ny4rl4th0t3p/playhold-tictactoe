@@ -1,0 +1,23 @@
+# PostgreSQL for the game's saves, on this machine only. The server and the page run outside it, as in chapter 4:
+#   docker compose up -d
+#   DATABASE_URL='postgres://postgres:tictactoe@localhost:5432/postgres?sslmode=disable' go run ./server
+# The password is for your own machine; a public database needs its own, and TLS.
+name: tictactoe
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_PASSWORD: tictactoe
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-h", "127.0.0.1", "-U", "postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+volumes:
+  postgres:

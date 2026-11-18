@@ -1,0 +1,129 @@
+import {create, fromBinary, toBinary} from "@bufbuild/protobuf";
+import {PlayholdClient, type ClientStatus, type ModuleView} from "playhold-sdk";
+
+import {BoardViewSchema, Mark, Message, PlaySchema, Status, type BoardView} from "./gen/tictactoe/v1/tictactoe_pb";
+
+// The rules stay on the server: this page shows the board the server sends, and sends a move when a cell is clicked.
+
+function element<T extends HTMLElement>(id: string): T {
+    const found = document.getElementById(id);
+    if (!found) {
+        throw new Error(`missing element: ${id}`);
+    }
+    return found as T;
+}
+
+const ui = {
+    connection: element("connection"),
+    message: element("message"),
+    newGame: element<HTMLButtonElement>("new-game"),
+    game: element("game"),
+    link: element<HTMLAnchorElement>("link"),
+    status: element("status"),
+    board: element("board"),
+};
+
+// #region text
+
+const connectionText: Record<ClientStatus, string> = {
+    disconnected: "Connection lost. Reconnecting…",
+    connecting: "Connecting…",
+    connected: "",
+    queued: "",
+    joined: "",
+    replaced: "You opened this game somewhere else, so it stopped here.",
+    closed: "Disconnected.",
+    updateRequired: "There's a newer version of this game. Reload to keep playing.",
+};
+
+const statusText: Record<Status, string> = {
+    [Status.UNSPECIFIED]: "",
+    [Status.WAITING]: "Waiting for the other player…",
+    [Status.YOUR_TURN]: "Your turn.",
+    [Status.THEIR_TURN]: "Their turn.",
+    [Status.WON]: "You won!",
+    [Status.LOST]: "You lost.",
+    [Status.DRAW]: "A draw.",
+};
+
+const markText: Record<Mark, string> = {[Mark.UNSPECIFIED]: "", [Mark.X]: "X", [Mark.O]: "O"};
+
+// #endregion text
+
+// #region client
+
+/**
+ * The game's server: set when the page is built, such as VITE_SERVER_URL=wss://game.example/ws for a public one, or by
+ * default port 8080 of the machine the page came from, where `go run ./server` listens.
+ */
+function serverUrl(): string {
+    const configured: unknown = import.meta.env.VITE_SERVER_URL;
+    if (typeof configured === "string" && configured !== "") {
+        return configured;
+    }
+    return `ws://${location.hostname}:8080/ws`;
+}
+
+const client = new PlayholdClient({
+    url: serverUrl(),
+    onStatus: (status) => {
+        ui.connection.textContent = connectionText[status];
+    },
+    onJoined: (code) => showRoom(code),
+    onState: (views) => render(boardOf(views)),
+    onError: (error) => {
+        ui.message.textContent = error.message; // such as "it isn't your turn"
+    },
+});
+
+// #endregion client
+
+// #region views
+
+/** The board's view, out of everything the player can see in the room: one view per module. */
+function boardOf(views: ModuleView[]): BoardView | undefined {
+    const view = views.find((v) => v.module === "board");
+    return view && fromBinary(BoardViewSchema, view.view);
+}
+
+function render(board: BoardView | undefined): void {
+    ui.status.textContent = board ? statusText[board.status] : "";
+    ui.board.replaceChildren(
+        ...(board?.cells ?? []).map((mark, cell) => {
+            const button = document.createElement("button");
+            button.textContent = markText[mark];
+            button.disabled = board?.status !== Status.YOUR_TURN || mark !== Mark.UNSPECIFIED;
+            button.addEventListener("click", () => play(cell));
+            return button;
+        }),
+    );
+}
+
+// #endregion views
+
+// #region moves
+
+function play(cell: number): void {
+    ui.message.textContent = "";
+    client.send("board", Message.PLAY, toBinary(PlaySchema, create(PlaySchema, {cell})));
+}
+
+/** Shows the room's code as a link to this page, for the other player to open. */
+function showRoom(code: string): void {
+    const link = new URL(location.href);
+    link.search = new URLSearchParams({room: code}).toString();
+    ui.link.href = link.href; // its text stays "this game's link": copy it with the browser's "Copy link"
+    history.replaceState(null, "", link);
+    ui.newGame.hidden = true;
+    ui.game.hidden = false;
+}
+
+ui.newGame.addEventListener("click", () => client.createRoom()); // the code arrives in onJoined
+
+client.connect();
+const shared = new URLSearchParams(location.search).get("room");
+if (shared) {
+    client.join(shared); // opened from the other player's link
+}
+
+// #endregion moves
