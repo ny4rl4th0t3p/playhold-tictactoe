@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package tictactoe.v1;
+
+option go_package = "github.com/ny4rl4th0t3p/playhold-tictactoe/chapter7/pb;pb";
+
+// #region messages
+
+// ScoreMessage is the ID of each of the score module's messages. IDs are the module's own, so they can repeat the
+// board's.
+enum ScoreMessage {
+  SCORE_MESSAGE_UNSPECIFIED = 0;
+  SCORE_MESSAGE_REMATCH = 1;
+}
+
+// Rematch asks for another game between the same players, once this one is over.
+message Rematch {}
+
+// ScoreView is the score as one player sees it: their wins, the other player's, and the draws.
+message ScoreView {
+  uint32 wins = 1;
+  uint32 losses = 2;
+  uint32 draws = 3;
+}
+
+// #endregion messages
+
+// #region saved
+
+// ScoreState is how the server saves the score module's state: the wins by seat, in the order the players sat down,
+// and the draws.
+message ScoreState {
+  repeated uint32 wins = 1;
+  uint32 draws = 2;
+}
+
+// #endregion saved

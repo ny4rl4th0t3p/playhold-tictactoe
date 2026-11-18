@@ -12,6 +12,7 @@ each chapter's finished code, so you can compare yours with it, or run it.
 | `chapter4/` | A page in the browser, on the TypeScript SDK, hosted on its own     |
 | `chapter5/` | Saving in PostgreSQL, so a game survives the server stopping        |
 | `chapter6/` | A time limit on each turn, and a saved state's new version          |
+| `chapter7/` | A second module, the score, through a keeper and an event           |
 
 Each folder is a complete, tested state of the game, in one Go module, so two chapters can be compared with `diff`.
 It builds on playhold's releases as any game would: playhold at the version in `go.mod`. A version `v0.X.y` of this
