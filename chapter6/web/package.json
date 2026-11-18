@@ -1,0 +1,22 @@
+{
+    "name": "tictactoe-web",
+    "version": "0.0.0",
+    "private": true,
+    "description": "The tutorial's tic-tac-toe page, after chapter 6",
+    "license": "Apache-2.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "check": "tsc && vite build",
+        "build": "vite build"
+    },
+    "dependencies": {
+        "@bufbuild/protobuf": "2.16.0",
+        "playhold-sdk": "git+https://github.com/ny4rl4th0t3p/playhold-sdk-ts.git#v0.4.0"
+    },
+    "devDependencies": {
+        "@bufbuild/protoc-gen-es": "2.16.0",
+        "typescript": "7.0.2",
+        "vite": "8.3.5"
+    }
+}
