@@ -1,0 +1,78 @@
+# The game as players would reach it: Caddy serves the page and ends TLS in front of the game server, which saves games
+# in PostgreSQL. Settings come from .env, next to this file; see .env.example.
+#   docker compose -f compose.prod.yaml up -d --build
+name: tictactoe-prod
+
+services:
+  caddy:
+    build:
+      # In this repository, go.mod is one folder up, and the game is in bonus/. In a project of your own, the context
+      # is "." and DIR is left out.
+      context: ..
+      dockerfile: bonus/Dockerfile
+      target: page
+      args:
+        DIR: bonus
+        GAME_ADDRESS: ${GAME_ADDRESS:?set it in .env}
+    environment:
+      PAGE_ADDRESS: ${PAGE_ADDRESS:?set it in .env}
+      GAME_ADDRESS: ${GAME_ADDRESS:?set it in .env}
+      LOCAL_CERTS: ${LOCAL_CERTS:-}
+    # The only port players reach. Both sites share it, told apart by name.
+    ports:
+      - "${PORT:-443}:${PORT:-443}"
+    volumes:
+      - caddy:/data # certificates, kept across restarts so Let's Encrypt isn't asked again
+    networks:
+      game:
+        ipv4_address: 172.30.0.2 # fixed, so the game server can trust it
+    restart: unless-stopped
+
+  game:
+    build:
+      context: ..
+      dockerfile: bonus/Dockerfile
+      target: server
+      args:
+        DIR: bonus
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:?set it in .env}@postgres:5432/postgres?sslmode=disable
+      ORIGINS: ${PAGE_ADDRESS}
+      TRUSTED_PROXIES: 172.30.0.2/32 # Caddy, and nothing else
+    # No ports: only Caddy reaches it, over the Compose network.
+    networks:
+      - game
+    # Starts the server again when it exits on its own, as after a crash; it restores every game from PostgreSQL.
+    restart: unless-stopped
+    # Saving every game on SIGTERM takes up to the server's shutdown timeout, 8 s by default; Docker kills it after this.
+    stop_grace_period: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set it in .env}
+    volumes:
+      - postgres:/var/lib/postgresql # every game in progress: back this up
+    networks:
+      - game
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-h", "127.0.0.1", "-U", "postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    restart: unless-stopped
+
+networks:
+  game:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+          # Docker numbers the other containers from here, so none takes Caddy's fixed 172.30.0.2.
+          ip_range: 172.30.0.128/25
+
+volumes:
+  caddy:
+  postgres:

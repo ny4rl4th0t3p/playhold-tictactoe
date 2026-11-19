@@ -1,0 +1,6 @@
+# The bonus's images build from this folder, where go.mod is. Installed and built files are made again inside them, and
+# .env holds a password.
+**/node_modules
+**/dist
+**/.env
+.git

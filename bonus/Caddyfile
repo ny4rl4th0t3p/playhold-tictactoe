@@ -1,0 +1,20 @@
+# Two sites, each with its own certificate: Let's Encrypt's for a real domain, Caddy's own for names ending in
+# .localhost. PAGE_ADDRESS, GAME_ADDRESS and LOCAL_CERTS come from compose.prod.yaml.
+
+# LOCAL_CERTS=local_certs in .env: Caddy's own certificates for every name, for a machine on your own network. Leave it
+# empty on a server with a domain, which gets Let's Encrypt's.
+{
+	{$LOCAL_CERTS}
+}
+
+# The page: only files, served from the image.
+{$PAGE_ADDRESS} {
+	root * /srv/page
+	file_server
+}
+
+# The game: TLS ends here, and the server gets plain HTTP over the Compose network, with the player's address in
+# X-Forwarded-For. WebSocket connections pass through as they are.
+{$GAME_ADDRESS} {
+	reverse_proxy game:8080
+}

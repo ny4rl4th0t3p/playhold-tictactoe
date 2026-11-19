@@ -5,9 +5,9 @@ BUF := go run github.com/bufbuild/buf/cmd/buf@$(BUF_VERSION)
 # The chapters with messages of their own, each its own buf project, as the reader's game folder would be. Every
 # chapter generates the same tictactoe/v1/tictactoe.proto into a Go package of its own; that's only safe because no
 # program links two chapters, since Go's protobuf registry is global to a program.
-PROTO_CHAPTERS := $(patsubst %/buf.yaml,%,$(wildcard chapter*/buf.yaml))
+PROTO_CHAPTERS := $(patsubst %/buf.yaml,%,$(wildcard chapter*/buf.yaml bonus/buf.yaml))
 # The chapters with a browser page, in web/.
-WEB_CHAPTERS := $(patsubst %/web/package.json,%,$(wildcard chapter*/web/package.json))
+WEB_CHAPTERS := $(patsubst %/web/package.json,%,$(wildcard chapter*/web/package.json bonus/web/package.json))
 
 .DEFAULT_GOAL := help
 

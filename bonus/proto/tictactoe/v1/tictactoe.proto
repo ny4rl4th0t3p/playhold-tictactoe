@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package tictactoe.v1;
+
+option go_package = "github.com/ny4rl4th0t3p/playhold-tictactoe/bonus/pb;pb";
+
+// #region messages
+
+// Message is the ID of each of the board module's messages.
+enum Message {
+  MESSAGE_UNSPECIFIED = 0;
+  MESSAGE_PLAY = 1;
+}
+
+// Play marks a cell, from 0 (top left) to 8 (bottom right).
+message Play {
+  int32 cell = 1;
+}
+
+// #endregion messages
+
+// #region view
+
+// Mark is what a cell holds, or a player's own mark. MARK_UNSPECIFIED is an empty cell.
+enum Mark {
+  MARK_UNSPECIFIED = 0;
+  MARK_X = 1;
+  MARK_O = 2;
+}
+
+// Status is how the game stands for the player a view is for.
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  STATUS_WAITING = 1; // for a second player
+  STATUS_YOUR_TURN = 2;
+  STATUS_THEIR_TURN = 3;
+  STATUS_WON = 4;
+  STATUS_LOST = 5;
+  STATUS_DRAW = 6;
+}
+
+// BoardView is what a player sees: the nine cells, their own mark, and how the game stands for them.
+message BoardView {
+  repeated Mark cells = 1;
+  Mark you = 2;
+  Status status = 3;
+  // How long the player to move has left, while the game is on, counted when the view was sent.
+  int64 turn_millis_left = 4;
+  // The game ended because the player to move ran out of time.
+  bool out_of_time = 5;
+}
+
+// #endregion view
+
+// #region saved
+
+// Result is how the game ended, or RESULT_UNSPECIFIED while it's on. Running out of time loses the game.
+enum Result {
+  RESULT_UNSPECIFIED = 0;
+  RESULT_X_WON = 1;
+  RESULT_O_WON = 2;
+  RESULT_DRAW = 3;
+  RESULT_X_OUT_OF_TIME = 4;
+  RESULT_O_OUT_OF_TIME = 5;
+}
+
+// BoardState is how the server saves the board module's state, so a game survives a restart. Only the server reads it:
+// it never goes to a client.
+message BoardState {
+  repeated Mark cells = 1;
+  uint32 moves = 2;
+  // Version 1 only: version 2 saves result instead, and the migration from version 1 reads these.
+  Mark winner = 3;
+  bool draw = 4;
+  // Version 2.
+  Result result = 5;
+  uint64 turn_timer = 6;
+}
+
+// TurnExpired is the turn timer's event: the player to move has run out of time. It's saved with the room's timers.
+message TurnExpired {}
+
+// #endregion saved
